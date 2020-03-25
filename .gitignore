@@ -25,7 +25,6 @@ UpgradeLog.XML
 *.idb
 *.ilk
 *.ncb
-*.obj
 *.opensdf
 *.pdb
 *.pyc
@@ -34,8 +33,7 @@ UpgradeLog.XML
 *.so
 *.suo
 *.user
-*.opendb
-*.db
+
 
 #--------------------------
 # ignored dirs for vc++
