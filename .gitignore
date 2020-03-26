@@ -50,3 +50,5 @@ target/
 build/
 Debug/
 Release/
+/OpenGLExersise/OpenGLExersise.VC.VC.opendb
+/OpenGLExersise/OpenGLExersise.VC.db

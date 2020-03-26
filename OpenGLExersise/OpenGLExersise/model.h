@@ -199,6 +199,7 @@ private:
 				texture.path = str.C_Str();
 				textures.push_back(texture);
 				textures_loaded.push_back(texture); // 添加到已加载的纹理中
+				std::cout << "load texture type=" << typeName << " name=" << str.C_Str() << std::endl;
 			}
 		}
 		return textures;

@@ -171,6 +171,8 @@
     <Text Include="shaders\started\vertexSource.vert" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\AdvancedGL\1.1.depth_testing.frag" />
+    <None Include="shaders\AdvancedGL\1.1.depth_testing.vert" />
     <None Include="shaders\lighting\object_caster.frag" />
     <None Include="shaders\lighting\object_caster.vert" />
     <None Include="shaders\lighting\object_flash.frag" />

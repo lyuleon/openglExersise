@@ -68,5 +68,7 @@
     <None Include="shaders\lighting\object_multi.vert" />
     <None Include="shaders\models\model_loading.frag" />
     <None Include="shaders\models\model_loading.vert" />
+    <None Include="shaders\AdvancedGL\1.1.depth_testing.frag" />
+    <None Include="shaders\AdvancedGL\1.1.depth_testing.vert" />
   </ItemGroup>
 </Project>
