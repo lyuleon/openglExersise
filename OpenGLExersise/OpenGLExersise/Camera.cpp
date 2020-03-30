@@ -6,7 +6,7 @@ Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
 	WorldUP = up;
 	Yaw = yaw;
 	Pitch = pitch;
-	Forward = glm::vec3(0.0f, 0.0f, -1.0f);
+	Front = glm::vec3(0.0f, 0.0f, -1.0f);
 	UpdateCameraVectors();
 }
 
@@ -14,9 +14,9 @@ Camera::Camera(glm::vec3 _position, glm::vec3 _target, glm::vec3 worldup)
 {
 	this->Position = _position;
 	this->WorldUP = worldup;
-	this->Forward = glm::normalize(_target - _position);
-	this->Right = glm::normalize(glm::cross(this->Forward, worldup));
-	this->UP = glm::normalize(glm::cross(this->Forward, this->Right));
+	this->Front = glm::normalize(_target - _position);
+	this->Right = glm::normalize(glm::cross(this->Front, worldup));
+	this->UP = glm::normalize(glm::cross(this->Front, this->Right));
 	this->Yaw = YAW;
 }
 
@@ -36,45 +36,49 @@ Camera::~Camera()
 
 glm::mat4 Camera::GetViewMatrix()
 {
-	return glm::lookAt(Position, Position + Forward, WorldUP);
-	/*glm::mat4 mat1 = glm::mat4(glm::vec4(Right, 0), glm::vec4(UP, 0), glm::vec4(Forward, 0), glm::vec4(glm::vec3(0), 1));
-	glm::mat4 mat2 = glm::translate(glm::mat4(1), glm::vec3(-Position.x, -Position.y, -Position.z));
-	return mat1*mat2;*/
+	return glm::lookAt(Position, Position + Front, UP);
 }
 
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
 	float velocity = SPEED *deltaTime;
 	if (direction == FORWARD)
-		Position += Forward*velocity;
+		Position += Front*velocity;
 	if (direction == BACKWARD)
-		Position -= Forward*velocity;
+		Position -= Front*velocity;
 	if (direction == LEFT)
 		Position -= Right*velocity;
 	if (direction == RIGHT)
 		Position += Right*velocity;
-	if(direction == Camera_Movement::UP)
-		Position -= UP*velocity;
-	if(direction == Camera_Movement::DOWN)
+	if (direction == Camera_Movement::UP)
 		Position += UP*velocity;
+	if (direction == Camera_Movement::DOWN)
+		Position -= UP*velocity;
 }
 
-void Camera::ProcessMouseMovement(float deltaX, float deltaY)
+void Camera::ProcessMouseMovement(float deltaX, float deltaY, bool constrainPitch)
 {
 	Pitch += deltaY*SENSITIVITY;
 	Yaw += deltaX*SENSITIVITY;
-	if (Pitch > 89.0f)
-		Pitch = 89.0f;
-	if (Pitch < -89.0f)
-		Pitch = -89.0f;
+	if (constrainPitch)
+	{
+		if (Pitch > 89.0f)
+			Pitch = 89.0f;
+		if (Pitch < -89.0f)
+			Pitch = -89.0f;
+	}
 	UpdateCameraVectors();
 }
 
 void Camera::UpdateCameraVectors()
 {
-	this->Forward.x = glm::cos(Pitch)*glm::cos(Yaw);
-	this->Forward.y = glm::sin(Pitch);
-	this->Forward.z = glm::cos(Pitch)*glm::sin(Yaw);
-	this->Right = glm::normalize(glm::cross(this->Forward, WorldUP));
-	this->UP = glm::normalize(glm::cross(this->Forward, this->Right));
+	glm::vec3 front;
+	front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+	front.y = sin(glm::radians(Pitch));
+	front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+	Front = glm::normalize(front);
+	// Also re-calculate the Right and Up vector
+	// Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+	Right = glm::normalize(glm::cross(Front, WorldUP));  
+	UP = glm::normalize(glm::cross(Right, Front));
 }
