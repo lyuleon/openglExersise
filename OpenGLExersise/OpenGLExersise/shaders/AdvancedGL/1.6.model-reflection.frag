@@ -32,10 +32,10 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 
 in vec2 TexCoords;
-in vec3 FragPos;
+in vec3 Position;
 in vec3 Normal;
 //光源信息+摄像机位置 通过main传入
-uniform vec3 viewPos;
+uniform vec3 cameraPos;
 uniform DirLight dirLight;
 #define NR_POINT_LIGHTS 4
 uniform PointLight pointLights[NR_POINT_LIGHTS];
@@ -46,6 +46,7 @@ uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
 uniform sampler2D texture_normal1;
 uniform sampler2D texture_height1;
+uniform samplerCube skybox;
 uniform float shininess;
 
 out vec4 FragColor;
@@ -53,14 +54,20 @@ void main()
 {    
 
 	vec3 norm = normalize(Normal);
-    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 viewDir = normalize(cameraPos - Position);
     // 第一阶段：定向光照
     vec3 result = CalcDirLight(dirLight, norm, viewDir);
     // 第二阶段：点光源
     for(int i = 0; i < NR_POINT_LIGHTS; i++)
-        result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);    
+        result += CalcPointLight(pointLights[i], norm, Position, viewDir);    
     // 第三阶段：聚光
-    result += CalcSpotLight(spotLight, norm, FragPos, viewDir);    
+    result += CalcSpotLight(spotLight, norm, Position, viewDir);
+
+	//第四阶段：反射贴图
+	vec3 I = normalize(Position - cameraPos);
+    vec3 R = reflect(I, normalize(Normal));
+    vec3 reflection = vec3(texture(skybox, R)) * vec3(texture(texture_height1, TexCoords));
+	result += reflection;
     FragColor = vec4(result, 1.0);
 }
 

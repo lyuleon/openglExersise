@@ -69,6 +69,11 @@ public:
 		for (int i = 0; i < meshes.size(); i++)
 			meshes[i].Draw(shader);
 	}
+	void SetCubemap(Shader *shader,unsigned int id)
+	{
+		for (int i = 0; i < meshes.size(); i++)
+			meshes[i].SetCubemap(shader,id);
+	}
 private:
 	/*  模型数据  */
 	vector<Mesh> meshes;

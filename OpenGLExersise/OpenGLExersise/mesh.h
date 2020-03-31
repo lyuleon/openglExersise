@@ -38,7 +38,7 @@ public:
 		setupMesh();
 	}
 	void Draw(Shader* shader)
-	{        
+	{
 		// bind appropriate textures
 		unsigned int diffuseNr = 1;
 		unsigned int specularNr = 1;
@@ -48,7 +48,7 @@ public:
 		{
 			// active proper texture unit before binding
 			// retrieve texture number (the N in diffuse_textureN)
-			glActiveTexture(GL_TEXTURE0 + i); 
+			glActiveTexture(GL_TEXTURE0 + i);
 			string number;
 			string name = textures[i].type;
 			if (name == "texture_diffuse")
@@ -60,7 +60,7 @@ public:
 			else if (name == "texture_height")
 				number = std::to_string(heightNr++); // transfer unsigned int to stream
 			// now set the sampler to the correct texture unit
-			shader->setInt((name + number).c_str(), i);	
+			shader->setInt((name + number).c_str(), i);
 			// and finally bind the texture
 			glBindTexture(GL_TEXTURE_2D, textures[i].id);
 		}
@@ -72,6 +72,14 @@ public:
 
 		// always good practice to set everything back to defaults once configured.
 		glActiveTexture(GL_TEXTURE0);
+	}
+
+	void SetCubemap(Shader* shader, unsigned int id)
+	{
+		unsigned cubemapIndex = textures.size();
+		glActiveTexture(GL_TEXTURE0 + cubemapIndex);
+		shader->setInt("skybox", cubemapIndex);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, id);
 	}
 private:
 	/*  äÖÈ¾Êý¾Ý  */
@@ -88,7 +96,7 @@ private:
 		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),&indices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
