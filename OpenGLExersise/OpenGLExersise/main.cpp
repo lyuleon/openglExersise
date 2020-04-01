@@ -835,7 +835,7 @@ int ModelLoadingDraw()
 #pragma endregion 
 
 #pragma region Model Data
-	Model ourModel("models/nanosuit.obj");
+	Model ourModel("models/nanosuit/nanosuit.obj");
 	float vertices[] = {
 		// positions          // normals           // texture coords
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -2419,7 +2419,7 @@ int CubeMap_Reflection()
 		-1.0f, -1.0f,  1.0f,
 		1.0f, -1.0f,  1.0f
 	};
-	Model ourModel("models/nanosuit.obj");
+	Model ourModel("models/nanosuit/nanosuit.obj");
 #pragma endregion
 
 #pragma region Textures
@@ -2645,7 +2645,7 @@ int CubeMap_Refraction()
 		-1.0f, -1.0f,  1.0f,
 		1.0f, -1.0f,  1.0f
 	};
-	Model ourModel("models/nanosuit.obj");
+	Model ourModel("models/nanosuit/nanosuit.obj");
 #pragma endregion
 
 #pragma region Textures
@@ -2783,7 +2783,7 @@ int Model_Reflection()
 #pragma endregion 
 
 #pragma region Model Data
-	Model ourModel("models/nanosuit.obj");
+	Model ourModel("models/nanosuit/nanosuit.obj");
 	float vertices[] = {
 		// positions          // normals           // texture coords
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -3221,6 +3221,229 @@ int Advanced_GLSL()
 	return 0;
 }
 
+int GeometryShader()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+#pragma region InitShader
+	Shader shader("shaders/AdvancedGL/9.1.geometry_shader.vert", "shaders/AdvancedGL/9.1.geometry_shader.frag", "shaders/AdvancedGL/9.1.geometry_shader.geom");
+#pragma endregion 
+
+#pragma region Model Data
+	float points[] = {
+		-0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // 左上
+		0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // 右上
+		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // 右下
+		-0.5f, -0.5f, 1.0f, 1.0f, 0.0f  // 左下
+	};
+#pragma endregion 
+
+#pragma region Init and load Models to VAO,VBO
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+#pragma endregion
+
+	// Render loop
+	while (!glfwWindowShouldClose(window))
+	{
+		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
+		processInput(window);
+		// Clear Screen
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//Set Model
+		shader.use();
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_POINTS, 0, 4);
+
+		//Draw Call
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	glfwTerminate();
+	return 0;
+}
+
+int GeometryShader_Explode()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+
+#pragma region InitShader
+	Shader shader("shaders/AdvancedGL/9.2.geometry_shader_explode.vert", "shaders/AdvancedGL/9.2.geometry_shader_explode.frag", "shaders/AdvancedGL/9.2.geometry_shader_explode.geom");
+#pragma endregion
+
+#pragma region Model Data
+	float cubeVertices[] = {
+		// Back face
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
+		0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // bottom-right         
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom-left
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+		// Front face
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+		0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
+		0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // top-left
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+		// Left face
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-left
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
+		// Right face
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right         
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
+		0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left     
+		 // Bottom face
+		 -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // top-left
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
+		 -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
+		 -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
+		// Top face
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right     
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+																																			 -0.5f,  0.5f,  0.5f,  0.0f, 0.0f  // bottom-left       
+	};
+#pragma endregion
+
+#pragma region Textures
+	unsigned int cubeTexture = loadTexture("textures/container2.png");
+#pragma endregion
+
+#pragma region Init and load Models to VAO,VBO
+	unsigned int cubeVAO;
+	glGenVertexArrays(1, &cubeVAO);
+	unsigned int cubeVBO;
+	glGenBuffers(1, &cubeVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+	//绑定
+	glBindVertexArray(cubeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+#pragma endregion
+
+	//Model objModel("models/nanosuit/nanosuit.obj");
+
+	while (!glfwWindowShouldClose(window))
+	{
+		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
+		processInput(window);
+		// Clear Screen
+		glEnable(GL_DEPTH_TEST);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//shader.use();
+		//glm::mat4 model = glm::mat4(1.0f);
+		//model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+		//model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+		//shader.setMat4("model", model);
+		//shader.setMat4("view", camera.GetViewMatrix());
+		//shader.setMat4("projection", glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
+		//shader.setFloat("time", glfwGetTime());
+		//objModel.Draw(&shader);
+
+		//drawcubs
+		shader.use();
+		shader.setInt("texture_diffuse1", 0);
+		shader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f)));
+		shader.setMat4("view", camera.GetViewMatrix());
+		shader.setMat4("projection", glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
+		shader.setFloat("time", glfwGetTime());
+		//draw cube
+		glBindVertexArray(cubeVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, cubeTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//draw cube2
+		shader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+#pragma region Delete 
+	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteBuffers(1, &cubeVBO);
+#pragma endregion 
+	glfwTerminate();
+}
+
 int main() {
-	return Advanced_GLSL();
+	return GeometryShader_Explode();
 }

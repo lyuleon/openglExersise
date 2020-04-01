@@ -14,9 +14,12 @@ public:
 	unsigned int ID; //shader program ID
 	std::string vertexString;
 	std::string fragmentString;
+	std::string geometryString;
 	const char* vertexSource;
 	const char* fragmentSource;
+	const char* geometrySource;
 	Shader(const char* vertexPath, const char* fragmentPath);
+	Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath);
 	~Shader();
 	void use();
 	void setBool(const std::string &name, bool value) const;

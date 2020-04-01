@@ -1,19 +1,28 @@
 #include "Shader.h"
 
-Shader::Shader(const char* vertexPath, const char* fragmentPath)
+Shader::Shader(const char* vertexPath, const char* fragmentPath) :Shader(vertexPath, fragmentPath, NULL) {}
+
+Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath)
 {
 	std::ifstream vertexFile;
 	std::ifstream fragmentFile;
-	std::stringstream vertexSStream, fragmentSStream;
+	std::ifstream geometryFile;
+	std::stringstream vertexSStream, fragmentSStream, geomeStream;
 	std::string vertexSDName = "VERTEXSHADER";
 	std::string fragmentSDName = "FRAGMENTSHADER";
+	std::string geometrySDName = "GEOMETRYSHADER";
 	std::string programSDName = "PROGRAM";
 
 	vertexFile.open(vertexPath);
 	fragmentFile.open(fragmentPath);
+	if (geometryPath != NULL)
+	{
+		geometryFile.open(geometryPath);
+	}
 
 	vertexFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	fragmentFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	geometryFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
 	try
 	{
@@ -29,6 +38,12 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 		vertexFile.close();
 		fragmentFile.close();
 
+		if (geometryPath != NULL && geometryFile.is_open())
+		{
+			geomeStream << geometryFile.rdbuf();
+			geometryString = geomeStream.str();
+			geometryFile.close();
+		}
 	}
 	catch (const std::exception& ex)
 	{
@@ -55,8 +70,20 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 	glDeleteShader(vertex);
 	glDeleteShader(fragment);
 
+	if (geometryPath != NULL)
+	{
+		geometrySource = geometryString.c_str();
+		unsigned int geometry;
+		geometry = glCreateShader(GL_GEOMETRY_SHADER);
+		glShaderSource(geometry, 1, &geometrySource, NULL);
+		glCompileShader(geometry);
+		checkCompileErrors(geometry, geometrySDName);
+		glAttachShader(ID, geometry);
+		glLinkProgram(ID);
+		checkCompileErrors(ID, geometrySDName);
+		glDeleteShader(geometry);
+	}
 }
-
 
 Shader::~Shader()
 {
