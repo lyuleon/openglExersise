@@ -9,9 +9,9 @@ out VS_OUT {
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
-
 void main()
 {
     vs_out.texCoords = aTexCoords;
-    gl_Position = projection * view * model * vec4(aPos, 1.0); 
+    gl_Position = projection*view*model*vec4(aPos, 1.0); 
+    //gl_Position = vec4(aPos, 1.0); 
 }

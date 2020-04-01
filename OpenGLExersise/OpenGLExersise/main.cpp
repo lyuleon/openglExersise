@@ -3298,6 +3298,7 @@ int GeometryShader()
 	return 0;
 }
 
+//TODO
 int GeometryShader_Explode()
 {
 #pragma region Open Window
@@ -3322,7 +3323,6 @@ int GeometryShader_Explode()
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 #pragma endregion 
-
 
 #pragma region InitShader
 	Shader shader("shaders/AdvancedGL/9.2.geometry_shader_explode.vert", "shaders/AdvancedGL/9.2.geometry_shader_explode.frag", "shaders/AdvancedGL/9.2.geometry_shader_explode.geom");
@@ -3397,17 +3397,18 @@ int GeometryShader_Explode()
 #pragma endregion
 
 	//Model objModel("models/nanosuit/nanosuit.obj");
-
 	while (!glfwWindowShouldClose(window))
 	{
 		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
 		processInput(window);
 		// Clear Screen
 		glEnable(GL_DEPTH_TEST);
+		//glEnable(GL_CULL_FACE);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//shader.use();
+		shader.use();
+
 		//glm::mat4 model = glm::mat4(1.0f);
 		//model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
 		//model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
@@ -3417,8 +3418,7 @@ int GeometryShader_Explode()
 		//shader.setFloat("time", glfwGetTime());
 		//objModel.Draw(&shader);
 
-		//drawcubs
-		shader.use();
+		//draw cubes
 		shader.setInt("texture_diffuse1", 0);
 		shader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f)));
 		shader.setMat4("view", camera.GetViewMatrix());
@@ -3441,6 +3441,69 @@ int GeometryShader_Explode()
 	glDeleteVertexArrays(1, &cubeVAO);
 	glDeleteBuffers(1, &cubeVBO);
 #pragma endregion 
+	glfwTerminate();
+}
+
+int GeometryShader_Normal()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+#pragma region InitShader
+	Shader shader("shaders/AdvancedGL/default_model.vert", "shaders/AdvancedGL/default_model.frag");
+	Shader geoshader("shaders/AdvancedGL/9.3.normal_visualization.vert", "shaders/AdvancedGL/9.3.normal_visualization.frag", "shaders/AdvancedGL/9.3.normal_visualization.geom");
+#pragma endregion
+
+	Model objModel("models/nanosuit/nanosuit.obj");
+	while (!glfwWindowShouldClose(window))
+	{
+		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
+		processInput(window);
+		// Clear Screen
+		glEnable(GL_DEPTH_TEST);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		shader.use();
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+		shader.setMat4("model", model);
+		shader.setMat4("view", camera.GetViewMatrix());
+		shader.setMat4("projection", glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
+		shader.setInt("texture_diffuse1", 0);
+		objModel.Draw(&shader);
+
+		geoshader.use();
+		geoshader.setMat4("model", model);
+		geoshader.setMat4("view", camera.GetViewMatrix());
+		geoshader.setMat4("projection", glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
+		objModel.Draw(&geoshader);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
 	glfwTerminate();
 }
 
