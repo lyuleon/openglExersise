@@ -31,6 +31,7 @@ public:
 	void setMat3(const std::string &name, const glm::mat3 &mat) const;
 	void setMat4(const std::string& name, const float* value) const;
 	void setMat4(const std::string &name, const glm::mat4 &mat) const;
+	void setUniformBlock(const std::string &name, const int &value) const;
 
 private:
 	void checkCompileErrors(GLuint ID, std::string& type);

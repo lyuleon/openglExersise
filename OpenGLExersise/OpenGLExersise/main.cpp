@@ -2,6 +2,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm.hpp>
+#include <gtc/type_ptr.hpp>
 #include "Camera.h"
 #include "model.h"
 
@@ -173,7 +175,7 @@ unsigned int loadCubemap(vector<std::string> faces)
 	int width, height, nrChannels;
 	for (unsigned int i = 0; i < faces.size(); i++)
 	{
-		unsigned char *data = stbi_load(("textures/skybox/"+faces[i]).c_str(), &width, &height, &nrChannels, 0);
+		unsigned char *data = stbi_load(("textures/skybox/" + faces[i]).c_str(), &width, &height, &nrChannels, 0);
 		if (data)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
@@ -1033,8 +1035,6 @@ int DepthTest()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
-
-	glEnable(GL_DEPTH_TEST);
 #pragma endregion 
 
 	// configure global opengl state
@@ -1150,13 +1150,9 @@ int DepthTest()
 		//Set MVP Matrices Every frame
 		shader.use();
 		shader.setInt("texture1", 0);
-		glm::mat4 model = glm::mat4(1.0f);
-		glm::mat4 view = camera.GetViewMatrix();
-		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-		shader.setMat4("model", model);
-		shader.setMat4("view", view);
-		shader.setMat4("projection", projection);
+		shader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f)));
+		shader.setMat4("view", camera.GetViewMatrix());
+		shader.setMat4("projection", glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		//draw cube
 		glBindVertexArray(cubeVAO);
@@ -1164,9 +1160,7 @@ int DepthTest()
 		glBindTexture(GL_TEXTURE_2D, cubeTexture);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		//draw cube2
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-		shader.setMat4("model", model);
+		shader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -2040,7 +2034,7 @@ int FrameBuffer()
 		//2.渲染主场景
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 		shader.use();
 		shader.setInt("texture1", 0);
@@ -2499,7 +2493,7 @@ int CubeMap_Reflection()
 		//绘制机器人
 		glm::mat4 model = glm::mat4(1.0f);
 		// translate it down so it's at the center of the scene
-		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); 
+		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f));
 		// it's a bit too big for our scene, so scale it down
 		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
 		objShader.setMat4("model", model);
@@ -2759,7 +2753,7 @@ int CubeMap_Refraction()
 
 int Model_Reflection()
 {
-	#pragma region Open Window
+#pragma region Open Window
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -2780,15 +2774,15 @@ int Model_Reflection()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
-	#pragma endregion 
+#pragma endregion 
 
-	#pragma region InitShader
+#pragma region InitShader
 	Shader* objShader = new Shader("shaders/AdvancedGL/1.6.model-reflection.vert", "shaders/AdvancedGL/1.6.model-reflection.frag");
 	Shader* lampShader = new Shader("shaders/lighting/light.vert", "shaders/lighting/light.frag");
 	Shader skyShader("shaders/AdvancedGL/1.6.skybox.vert", "shaders/AdvancedGL/1.6.skybox.frag");
-	#pragma endregion 
+#pragma endregion 
 
-	#pragma region Model Data
+#pragma region Model Data
 	Model ourModel("models/nanosuit.obj");
 	float vertices[] = {
 		// positions          // normals           // texture coords
@@ -2890,20 +2884,20 @@ int Model_Reflection()
 		-1.0f, -1.0f,  1.0f,
 		1.0f, -1.0f,  1.0f
 	};
-	#pragma endregion 
+#pragma endregion 
 
-	#pragma region Textures
+#pragma region Textures
 	vector<std::string> faces{
 		"right.jpg",
 		"left.jpg",
 		"top.jpg",
 		"bottom.jpg",
 		"front.jpg",
-		"back.jpg"};
+		"back.jpg" };
 	unsigned int cubemapTexture = loadCubemap(faces);
-	#pragma endregion
+#pragma endregion
 
-	#pragma region Init and load Models to VAO,VBO
+#pragma region Init and load Models to VAO,VBO
 
 	unsigned int lightVAO;
 	glGenVertexArrays(1, &lightVAO);
@@ -2930,7 +2924,7 @@ int Model_Reflection()
 	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	#pragma endregion
+#pragma endregion
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -3036,13 +3030,197 @@ int Model_Reflection()
 		glfwPollEvents();
 	}
 
-	#pragma region Delete
+#pragma region Delete
 	delete objShader;
 	glfwTerminate();
-	#pragma endregion 
+#pragma endregion 
+	return 0;
+}
+
+int Advanced_GLSL()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+#pragma region InitShader
+	Shader blueShader("shaders/AdvancedGL/8.advanced_glsl.vert", "shaders/AdvancedGL/8.blue.frag");
+	Shader greenShader("shaders/AdvancedGL/8.advanced_glsl.vert", "shaders/AdvancedGL/8.green.frag");
+	Shader redShader("shaders/AdvancedGL/8.advanced_glsl.vert", "shaders/AdvancedGL/8.red.frag");
+	Shader yellowShader("shaders/AdvancedGL/8.advanced_glsl.vert", "shaders/AdvancedGL/8.yellow.frag");
+#pragma endregion
+
+#pragma region Model Data
+	float cubeVertices[] = {
+		// Back face
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
+		0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // bottom-right         
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom-left
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+		// Front face
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+		0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
+		0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // top-left
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+		// Left face
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-left
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
+		// Right face
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right         
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
+		0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left     
+		 // Bottom face
+		 -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // top-left
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
+		 -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
+		 -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
+		// Top face
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right     
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+																																			 -0.5f,  0.5f,  0.5f,  0.0f, 0.0f  // bottom-left       
+	};
+	float planeVertices[] = {
+		// positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
+		5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+		-5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+
+		5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+		5.0f, -0.5f, -5.0f,  2.0f, 2.0f
+	};
+#pragma endregion
+
+#pragma region Init and load Models to VAO,VBO
+	unsigned int cubeVAO;
+	glGenVertexArrays(1, &cubeVAO);
+	unsigned int planeVAO;
+	glGenVertexArrays(1, &planeVAO);
+
+	unsigned int cubeVBO;
+	glGenBuffers(1, &cubeVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+	unsigned int planeVBO;
+	glGenBuffers(1, &planeVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+
+	//绑定
+	glBindVertexArray(cubeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(planeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+#pragma endregion
+
+#pragma region UniformSetting
+	unsigned int uboMatrices;
+	int unifromID = 0;
+	glGenBuffers(1, &uboMatrices);
+
+	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+	glBindBufferBase(GL_UNIFORM_BUFFER, unifromID, uboMatrices);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+#pragma endregion 
+
+	glEnable(GL_DEPTH_TEST);
+
+	while (!glfwWindowShouldClose(window))
+	{
+		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
+		processInput(window);
+		// Clear Screen
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glm::mat4 view = camera.GetViewMatrix();
+		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+		blueShader.use();
+		blueShader.setUniformBlock("Matrices", unifromID);
+		blueShader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 1.0f, 0.0f)));
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//draw cube
+		glBindVertexArray(cubeVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//draw cube2
+		greenShader.use();
+		greenShader.setUniformBlock("Matrices", unifromID);
+		greenShader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 0.0f)));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//draw cube3
+		redShader.use();
+		redShader.setUniformBlock("Matrices", unifromID);
+		redShader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, -1.0f, 0.0f)));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//draw cube4
+		yellowShader.use();
+		yellowShader.setUniformBlock("Matrices", unifromID);
+		yellowShader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, -1.0f, 0.0f)));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+#pragma region Delete 
+	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteVertexArrays(1, &planeVAO);
+	glDeleteBuffers(1, &cubeVBO);
+	glDeleteBuffers(1, &planeVBO);
+#pragma endregion 
+	glfwTerminate();
 	return 0;
 }
 
 int main() {
-	return Model_Reflection();
+	return Advanced_GLSL();
 }
