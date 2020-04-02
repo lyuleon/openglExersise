@@ -3391,12 +3391,13 @@ int GeometryShader_Explode()
 	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 #pragma endregion
-
-	//Model objModel("models/nanosuit/nanosuit.obj");
+	glm::vec3 tvec3 = glm::cross(glm::vec3(1, 0, 0), glm::vec3(0, -1, 0));
+	//glm::mat4 tmat4_x4 = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+	Model objModel("models/nanosuit/nanosuit.obj");
 	while (!glfwWindowShouldClose(window))
 	{
 		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
@@ -3408,30 +3409,30 @@ int GeometryShader_Explode()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.use();
-
-		//glm::mat4 model = glm::mat4(1.0f);
-		//model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
-		//model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
-		//shader.setMat4("model", model);
-		//shader.setMat4("view", camera.GetViewMatrix());
-		//shader.setMat4("projection", glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
-		//shader.setFloat("time", glfwGetTime());
-		//objModel.Draw(&shader);
-
-		//draw cubes
 		shader.setInt("texture_diffuse1", 0);
-		shader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f)));
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+		shader.setMat4("model", model);
 		shader.setMat4("view", camera.GetViewMatrix());
 		shader.setMat4("projection", glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
 		shader.setFloat("time", glfwGetTime());
-		//draw cube
-		glBindVertexArray(cubeVAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, cubeTexture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		//draw cube2
-		shader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)));
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		objModel.Draw(&shader);
+
+		////draw cubes
+		//shader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f)));
+		//shader.setMat4("view", camera.GetViewMatrix());
+		//shader.setMat4("projection", glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
+		//shader.setFloat("time", glfwGetTime());
+		////draw cube
+		//glBindVertexArray(cubeVAO);
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, cubeTexture);
+		//glDrawArrays(GL_TRIANGLES, 0, 36);
+		////draw cube2
+		//shader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)));
+		//glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

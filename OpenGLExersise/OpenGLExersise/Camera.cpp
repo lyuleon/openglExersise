@@ -35,20 +35,22 @@ Camera::~Camera()
 
 glm::mat4 Camera::GetViewMatrix()
 {
-	return glm::lookAt(Position, Position + Front, WorldUP);
+	//camera front指向自己Z轴反方向
+	return glm::lookAt(Position, Position - Front, WorldUP);
 }
 
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
+	//camera front指向自己Z轴反方向
 	float velocity = SPEED *deltaTime;
 	if (direction == FORWARD)
-		Position += Front*velocity;
-	if (direction == BACKWARD)
 		Position -= Front*velocity;
+	if (direction == BACKWARD)
+		Position += Front*velocity;
 	if (direction == LEFT)
-		Position += Right*velocity;
-	if (direction == RIGHT)
 		Position -= Right*velocity;
+	if (direction == RIGHT)
+		Position += Right*velocity;
 	if (direction == Camera_Movement::UP)
 		Position += UP*velocity;
 	if (direction == Camera_Movement::DOWN)
@@ -73,7 +75,7 @@ void Camera::UpdateCameraVectors()
 {
 	glm::vec3 front;
 	front.x = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-	front.y = sin(glm::radians(Pitch));
+	front.y = -sin(glm::radians(Pitch));
 	front.z = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
 	Front = glm::normalize(front);
 	Right = glm::normalize(glm::cross(WorldUP, Front));
