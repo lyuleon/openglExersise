@@ -3298,7 +3298,6 @@ int GeometryShader()
 	return 0;
 }
 
-//TODO
 int GeometryShader_Explode()
 {
 #pragma region Open Window
@@ -3508,6 +3507,327 @@ int GeometryShader_Normal()
 	glfwTerminate();
 }
 
+int GPU_Instancing()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+#pragma region InitShader
+	Shader shader("shaders/AdvancedGL/10.1.Instancing.vert", "shaders/AdvancedGL/10.1.Instancing.frag");
+#pragma endregion 
+
+#pragma region Model Data
+	float quadVertices[] = {
+		// 位置          // 颜色
+		-0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+		0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
+		-0.05f, -0.05f,  0.0f, 0.0f, 1.0f,
+
+		-0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+		0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
+		0.05f,  0.05f,  0.0f, 1.0f, 1.0f
+	};
+	glm::vec2 translations[100];
+	int index = 0;
+	float offset = 0.1f;
+	for (int y = -10; y < 10; y += 2)
+	{
+		for (int x = -10; x < 10; x += 2)
+		{
+			glm::vec2 translation;
+			translation.x = (float)x / 10.0f + offset;
+			translation.y = (float)y / 10.0f + offset;
+			translations[index++] = translation;
+		}
+	}
+#pragma endregion 
+
+#pragma region Init and load Models to VAO,VBO
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+	//往shader.vert中输入实例化数据结构
+	unsigned int instanceVBO;
+	glGenBuffers(1, &instanceVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 100, &translations[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+	glVertexAttribDivisor(2, 1);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+#pragma endregion
+
+	// Render loop
+	while (!glfwWindowShouldClose(window))
+	{
+		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
+		processInput(window);
+		// Clear Screen
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		shader.use();
+		//Draw call
+		glBindVertexArray(VAO);
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	glfwTerminate();
+	return 0;
+}
+
+int GPU_Intance_Planet_1()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+#pragma region InitShader
+	Shader shader("shaders/AdvancedGL/default_model.vert", "shaders/AdvancedGL/default_model.frag");
+#pragma endregion 
+
+#pragma region Model Data
+	Model planet("models/planet/planet.obj");
+	Model rock("models/rock/rock.obj");
+
+	//生成1000个行星model矩阵
+	unsigned int amount = 1000;
+	glm::mat4 *modelMatrices;
+	modelMatrices = new glm::mat4[amount];
+	srand(glfwGetTime()); // 初始化随机种子    
+	float radius = 50.0;
+	float offset = 2.5f;
+	for (unsigned int i = 0; i < amount; i++)
+	{
+		glm::mat4 model;
+		// 1. 位移：分布在半径为 'radius' 的圆形上，偏移的范围是 [-offset, offset]
+		float angle = (float)i / (float)amount * 360.0f;
+		float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float x = sin(angle) * radius + displacement;
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float y = displacement * 0.4f; // 让行星带的高度比x和z的宽度要小
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float z = cos(angle) * radius + displacement;
+		model = glm::translate(model, glm::vec3(x, y, z));
+
+		// 2. 旋转：绕着一个（半）随机选择的旋转轴向量进行随机的旋转
+		float rotAngle = (rand() % 360);
+		model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+		// 3. 缩放：在 0.05 和 0.25f 之间缩放
+		float scale = (rand() % 20) / 100.0f + 0.05;
+		model = glm::scale(model, glm::vec3(scale));
+
+		// 4. 添加到矩阵的数组中
+		modelMatrices[i] = model;
+	}
+#pragma endregion 
+
+	//camera init move
+	camera.Position = glm::vec3(0, 0, radius+5);
+	camera.UpdateCameraVectors();
+
+	// Render loop
+	while (!glfwWindowShouldClose(window))
+	{
+		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
+		processInput(window);
+		// Clear Screen
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+
+		// 绘制行星
+		shader.use();
+		//--------------------------------Set MVP Matrix-----------------------------------
+		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		glm::mat4 view = camera.GetViewMatrix();
+		shader.setMat4("view", view);
+		shader.setMat4("projection", projection);
+		glm::mat4 model;
+		model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+		shader.setMat4("model", model);
+		planet.Draw(&shader);
+
+		// 绘制小行星
+		for (unsigned int i = 0; i < amount; i++)
+		{
+			shader.setMat4("model", modelMatrices[i]);
+			rock.Draw(&shader);
+		}
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	delete modelMatrices;
+	glfwTerminate();
+	return 0;
+}
+
+int GPU_Intance_Planet_2()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+#pragma region InitShader
+	Shader shader("shaders/AdvancedGL/default_model.vert", "shaders/AdvancedGL/default_model.frag");
+	Shader instanceShader("shaders/AdvancedGL/10.1.Instance_Model.vert", "shaders/AdvancedGL/10.1.Instance_Model.frag");
+#pragma endregion 
+
+#pragma region Model Data
+	//生成1000个行星model矩阵
+	unsigned int amount = 50000;
+	glm::mat4 *modelMatrices;
+	modelMatrices = new glm::mat4[amount];
+	srand(glfwGetTime()); // 初始化随机种子    
+	float radius = 100.0f;
+	float offset = 20.0f;
+	for (unsigned int i = 0; i < amount; i++)
+	{
+		glm::mat4 model;
+		// 1. 位移：分布在半径为 'radius' 的圆形上，偏移的范围是 [-offset, offset]
+		float angle = (float)i / (float)amount * 360.0f;
+		float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float x = sin(angle) * radius + displacement;
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float y = displacement * 0.4f; // 让行星带的高度比x和z的宽度要小
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float z = cos(angle) * radius + displacement;
+		model = glm::translate(model, glm::vec3(x, y, z));
+
+		// 2. 旋转：绕着一个（半）随机选择的旋转轴向量进行随机的旋转
+		float rotAngle = (rand() % 360);
+		model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+		// 3. 缩放：在 0.05 和 0.25f 之间缩放
+		float scale = (rand() % 20) / 100.0f + 0.05;
+		model = glm::scale(model, glm::vec3(scale));
+
+		// 4. 添加到矩阵的数组中
+		modelMatrices[i] = model;
+	}
+	Model planet("models/planet/planet.obj");
+	Model rock("models/rock/rock.obj");
+	//灌入modelMatrix
+	rock.SetupMat4Instance(modelMatrices, amount);
+
+#pragma endregion 
+
+	//camera init move
+	camera.Position = glm::vec3(0, 0, radius + 5);
+	camera.UpdateCameraVectors();
+
+	// Render loop
+	while (!glfwWindowShouldClose(window))
+	{
+		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
+		processInput(window);
+		// Clear Screen
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+
+		// 绘制行星
+		shader.use();
+		//--------------------------------Set MVP Matrix-----------------------------------
+		glm::mat4 model;
+		model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
+		glm::mat4 view = camera.GetViewMatrix();
+		shader.setMat4("view", view);
+		shader.setMat4("projection", projection);
+		shader.setMat4("model", model);
+		planet.Draw(&shader);
+
+		// 绘制小行星
+		instanceShader.use();
+		instanceShader.setMat4("view", view);
+		instanceShader.setMat4("projection", projection);
+		rock.DrawInstanced(&instanceShader, amount);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	delete modelMatrices;
+	glfwTerminate();
+	return 0;
+}
+
 int main() {
-	return GeometryShader_Explode();
+	return GPU_Intance_Planet_2();
 }

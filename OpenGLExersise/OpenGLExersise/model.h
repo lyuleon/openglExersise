@@ -69,10 +69,25 @@ public:
 		for (int i = 0; i < meshes.size(); i++)
 			meshes[i].Draw(shader);
 	}
-	void SetCubemap(Shader *shader,unsigned int id)
+	void DrawInstanced(Shader * shader, unsigned int count)
 	{
 		for (int i = 0; i < meshes.size(); i++)
-			meshes[i].SetCubemap(shader,id);
+			meshes[i].DrawInstance(shader, count);
+	}
+	void SetupMat4Instance(glm::mat4* modelMatrices,unsigned int count)
+	{
+		unsigned int buffer;
+		glGenBuffers(1, &buffer);
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glBufferData(GL_ARRAY_BUFFER, count * sizeof(glm::mat4), modelMatrices, GL_STATIC_DRAW);
+		for (int i = 0; i < meshes.size(); i++)
+			meshes[i].SetupMat4Instance();
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+	void SetCubemap(Shader *shader, unsigned int id)
+	{
+		for (int i = 0; i < meshes.size(); i++)
+			meshes[i].SetCubemap(shader, id);
 	}
 private:
 	/*  模型数据  */
