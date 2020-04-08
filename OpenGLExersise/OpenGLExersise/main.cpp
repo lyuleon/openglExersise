@@ -19,6 +19,8 @@ float fov = 45.0f;
 float lastX = 400.0f;
 float lastY = 300.0f;
 bool firstMouseIn = true;
+bool blinn = false;
+bool blinnKeyPressed = false;
 float lastRenderTime = 0;
 
 void processInput(GLFWwindow *window)
@@ -61,6 +63,15 @@ void processInput(GLFWwindow *window)
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 	{
 		camera.ProcessKeyboard(DOWN, delta);
+	}
+	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !blinnKeyPressed)
+	{
+		blinn = !blinn;
+		blinnKeyPressed = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
+	{
+		blinnKeyPressed = false;
 	}
 }
 
@@ -133,6 +144,7 @@ unsigned int loadTexture(const char* path)
 	glGenTextures(1, &textureID);
 
 	int width, height, nrComponents;
+	stbi_set_flip_vertically_on_load(true);
 	unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
 	if (data)
 	{
@@ -197,6 +209,175 @@ unsigned int loadCubemap(vector<std::string> faces)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	return textureID;
 }
+
+#pragma region  renderCube() renders a 1x1 3D cube in NDC.
+unsigned int cubeVAO = 0;
+unsigned int cubeVBO = 0;
+void renderCube()
+{
+	// initialize (if necessary)
+	if (cubeVAO == 0)
+	{
+		float vertices[] = {
+			// back face
+			-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+			 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+			 1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+			 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+			-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+			-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+			// front face
+			-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+			 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+			 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+			 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+			-1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+			-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+			// left face
+			-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+			-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+			-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+			-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+			-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+			-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+			// right face
+			 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+			 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+			 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+			 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+			 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+			 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+			// bottom face
+			-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+			 1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+			 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+			 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+			-1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+			-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+			// top face
+			-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+			 1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+			 1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+			 1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+			-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+			-1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+		};
+		glGenVertexArrays(1, &cubeVAO);
+		glGenBuffers(1, &cubeVBO);
+		// fill buffer
+		glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		// link vertex attributes
+		glBindVertexArray(cubeVAO);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+	// render Cube
+	glBindVertexArray(cubeVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
+}
+#pragma endregion 
+
+#pragma region renderQuad() renders a 1x1 XY quad in NDC
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+void renderQuad()
+{
+	if (quadVAO == 0)
+	{
+		float quadVertices[] = {
+			// positions        // texture Coords
+			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+			1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+			1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		};
+		// setup plane VAO
+		glGenVertexArrays(1, &quadVAO);
+		glGenBuffers(1, &quadVBO);
+		glBindVertexArray(quadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	}
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
+}
+#pragma endregion
+
+#pragma region renderplande() renders a plane in world space
+unsigned int planeVAO = 0;
+unsigned int planeVBO;
+void renderPlane()
+{
+	if (planeVAO == 0)
+	{
+		float planeVertices[] = {
+			// positions            // normals         // texcoords
+			25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+			-25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+			-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+
+			25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+			-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+			25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
+		};
+		// setup plane VAO
+		glGenVertexArrays(1, &planeVAO);
+		glGenBuffers(1, &planeVBO);
+		glBindVertexArray(planeVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glBindVertexArray(0);
+	}
+	glBindVertexArray(planeVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);
+}
+#pragma endregion
+
+#pragma region renderscene() renders a scene in shadow chapter
+void renderSceneShadow(Shader *shader)
+{
+	shader->setMat4("model", glm::mat4(1.0f));
+	renderPlane();
+	// cubes
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
+	model = glm::scale(model, glm::vec3(0.5f));
+	shader->setMat4("model", model);
+	renderCube();
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+	model = glm::scale(model, glm::vec3(0.5f));
+	shader->setMat4("model", model);
+	renderCube();
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
+	model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+	model = glm::scale(model, glm::vec3(0.25));
+	shader->setMat4("model", model);
+	renderCube();
+}
+#pragma endregion
+
 
 int draw_10box_1time()
 {
@@ -4062,7 +4243,7 @@ int AntiAliasing()
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, msFBO);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFBO);
 		glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		
+
 		//3.PASS 渲染一个屏幕四边形，从intermediateFBO采样颜色
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -4328,6 +4509,498 @@ int AntiAliasing_sampleMS()
 	glfwTerminate();
 }
 
+int Advanced_Lighting()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+#pragma region InitShader
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	Shader shader("shaders/AdvancedLighting/1.advanced_lighting.vert", "shaders/AdvancedLighting/1.advanced_lighting.frag");
+#pragma endregion
+
+#pragma region Model Data
+	float planeVertices[] = {
+		// positions            // normals         // texcoords
+		10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+		-10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		-10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+
+		10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+		-10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+		10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
+	};
+#pragma endregion
+
+#pragma region Textures
+	unsigned int floorTexture = loadTexture("textures/wood.png");
+#pragma endregion
+
+#pragma region Init and load Models to VAO,VBO
+	unsigned int planeVAO;
+	glGenVertexArrays(1, &planeVAO);
+	unsigned int planeVBO;
+	glGenBuffers(1, &planeVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+	//绑定
+	glBindVertexArray(planeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+#pragma endregion
+
+	while (!glfwWindowShouldClose(window))
+	{
+		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
+		processInput(window);
+		// Clear Screen
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//Set MVP Matrices Every frame
+		shader.use();
+		shader.setMat4("view", camera.GetViewMatrix());
+		shader.setMat4("projection", glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
+		shader.setInt("floorTexture", 0);
+		shader.setVec3("viewPos", camera.Position);
+		shader.setVec3("lightPos", glm::vec3(0));
+		shader.setInt("blinn", blinn);
+		glBindVertexArray(planeVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, floorTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+#pragma region Delete 
+	glDeleteVertexArrays(1, &planeVAO);
+	glDeleteBuffers(1, &planeVBO);
+#pragma endregion 
+	glfwTerminate();
+}
+
+int Gamma_Correction()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+#pragma region InitShader
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	Shader shader("shaders/AdvancedLighting/2.gamma_correction.vert", "shaders/AdvancedLighting/2.gamma_correction.frag");
+#pragma endregion
+
+#pragma region Model Data
+	float planeVertices[] = {
+		// positions            // texcoords
+		1.0f, 1.0f, 0,  1.0f,  1.0f,
+		-1.0f, 1.0f,0,   0.0f,  1.0f,
+		-1.0f, -1.0f,0,   0.0f, 0.0f,
+
+		1.0f, 1.0f, 0,  1.0f,  1.0f,
+		-1.0f, -1.0f,0,   0.0f, 0.0f,
+		1.0f, -1.0f, 0,  1.0f, 0.0f
+	};
+#pragma endregion
+
+#pragma region Textures
+	unsigned int floorTexture = loadTexture("textures/container2.png");
+#pragma endregion
+
+#pragma region Init and load Models to VAO,VBO
+	unsigned int planeVAO;
+	glGenVertexArrays(1, &planeVAO);
+	unsigned int planeVBO;
+	glGenBuffers(1, &planeVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+	//绑定
+	glBindVertexArray(planeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+#pragma endregion
+
+	while (!glfwWindowShouldClose(window))
+	{
+		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
+		processInput(window);
+		// Clear Screen
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//Set MVP Matrices Every frame
+		shader.use();
+		shader.setInt("floorTexture", 0);
+		glBindVertexArray(planeVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, floorTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+#pragma region Delete 
+	glDeleteVertexArrays(1, &planeVAO);
+	glDeleteBuffers(1, &planeVBO);
+#pragma endregion 
+	glfwTerminate();
+}
+
+int Shadow_Mapping_Depth()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+#pragma region InitShader
+	glEnable(GL_DEPTH_TEST);
+	Shader simpleDepthShader("shaders/AdvancedLighting/3.1.2.shadow_mapping_depth.vert", "shaders/AdvancedLighting/3.1.2.shadow_mapping_depth.frag");
+	Shader DepthQuadShader("shaders/AdvancedLighting/3.1.2.debug_quad.vert", "shaders/AdvancedLighting/3.1.2.debug_quad.frag");
+#pragma endregion
+
+#pragma region Textures
+	unsigned int woodTexture = loadTexture("textures/wood.png");
+#pragma endregion
+
+#pragma region Init FrameBuffer
+	unsigned int depthMapFBO;
+	glGenFramebuffers(1, &depthMapFBO);
+	//generate depthmap texture
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	unsigned int depthMap;
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//bind depthTexture to FBO
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#pragma endregion
+
+	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
+	while (!glfwWindowShouldClose(window))
+	{
+		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
+		processInput(window);
+		// 1. 首选渲染深度贴图
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		float nearPlane = 1.0f;
+		float farPlane = 7.5f;
+		glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+		glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+		simpleDepthShader.use();
+		simpleDepthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+		//render scene
+		renderSceneShadow(&simpleDepthShader);
+		// 2. 像往常一样渲染场景，但这次使用深度贴图
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		DepthQuadShader.use();
+		DepthQuadShader.setInt("depthMap", 0);
+		DepthQuadShader.setFloat("near_plane", nearPlane);
+		DepthQuadShader.setFloat("far_plane", farPlane);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		renderQuad();
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	glfwTerminate();
+}
+
+int Shadow_Mapping_Base()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+#pragma region InitShader
+	glEnable(GL_DEPTH_TEST);
+	Shader simpleDepthShader("shaders/AdvancedLighting/3.1.2.shadow_mapping_depth.vert", "shaders/AdvancedLighting/3.1.2.shadow_mapping_depth.frag");
+	Shader shadowShader("shaders/AdvancedLighting/3.1.2.shadow_mapping.vert", "shaders/AdvancedLighting/3.1.2.shadow_mapping.frag");
+#pragma endregion
+
+#pragma region Textures
+	unsigned int woodTexture = loadTexture("textures/wood.png");
+#pragma endregion
+
+#pragma region Init FrameBuffer
+	GLuint depthMapFBO;
+	glGenFramebuffers(1, &depthMapFBO);
+	//generate depthmap texture
+	const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	GLuint depthMap;
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//bind depthTexture to FBO
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#pragma endregion
+
+	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
+	while (!glfwWindowShouldClose(window))
+	{
+		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
+		processInput(window);
+		// 1. 首选渲染深度贴图
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		float nearPlane = 1.0f;
+		float farPlane = 7.5f;
+		glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+		glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0), glm::vec3(0, 1.0f, 0.0f));
+		glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+		simpleDepthShader.use();
+		simpleDepthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		//renderscene
+		renderSceneShadow(&simpleDepthShader);
+		// 2. 像往常一样渲染场景，但这次使用深度贴图
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		shadowShader.use();
+		shadowShader.setMat4("view", camera.GetViewMatrix());
+		shadowShader.setMat4("projection", glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
+		shadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		shadowShader.setVec3("lightPos", lightPos);
+		shadowShader.setVec3("viewPos", camera.Position);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		shadowShader.setInt("shadowMap", 0);
+		glActiveTexture(GL_TEXTURE0 + 1);
+		glBindTexture(GL_TEXTURE_2D, woodTexture);
+		shadowShader.setInt("diffuseTexture", 1);
+		//renderscene
+		renderSceneShadow(&shadowShader);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	glfwTerminate();
+}
+
+int Shadow_Mapping()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+#pragma region InitShader
+	glEnable(GL_DEPTH_TEST);
+	Shader simpleDepthShader("shaders/AdvancedLighting/3.1.3.shadow_mapping_depth.vert", "shaders/AdvancedLighting/3.1.3.shadow_mapping_depth.frag");
+	Shader shadowShader("shaders/AdvancedLighting/3.1.3.shadow_mapping.vert", "shaders/AdvancedLighting/3.1.3.shadow_mapping.frag");
+#pragma endregion
+
+#pragma region Textures
+	unsigned int woodTexture = loadTexture("textures/wood.png");
+#pragma endregion
+
+#pragma region Init FrameBuffer
+	GLuint depthMapFBO;
+	glGenFramebuffers(1, &depthMapFBO);
+	//generate depthmap texture
+	const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	GLuint depthMap;
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	GLfloat borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+	//bind depthTexture to FBO
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#pragma endregion
+
+	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
+	while (!glfwWindowShouldClose(window))
+	{
+		// input处理输入放在最前,原因是glfwPollEvents需要消耗不少时间
+		processInput(window);
+		// 1. 首选渲染深度贴图
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		float nearPlane = 1.0f;
+		float farPlane = 7.5f;
+		glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+		glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+		simpleDepthShader.use();
+		simpleDepthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		//renderscene
+		glCullFace(GL_FRONT);
+		renderSceneShadow(&simpleDepthShader);
+		glCullFace(GL_BACK); // 不要忘记设回原先的culling face
+		// 2. 像往常一样渲染场景，但这次使用深度贴图
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		shadowShader.use();
+		shadowShader.setMat4("view", camera.GetViewMatrix());
+		shadowShader.setMat4("projection", glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
+		shadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		shadowShader.setVec3("lightPos", lightPos);
+		shadowShader.setVec3("viewPos", camera.Position);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		shadowShader.setInt("shadowMap", 0);
+		glActiveTexture(GL_TEXTURE0 + 1);
+		glBindTexture(GL_TEXTURE_2D, woodTexture);
+		shadowShader.setInt("diffuseTexture", 1);
+		//renderscene
+		renderSceneShadow(&shadowShader);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	glfwTerminate();
+}
+
 int main() {
-	return AntiAliasing();
+	return Shadow_Mapping_Depth();
 }

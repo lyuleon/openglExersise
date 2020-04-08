@@ -5,9 +5,9 @@
 #include <sstream>
 #include <iostream>
 #define GLEW_STATIC
-#include <mat4x2.hpp>
 #include <GL/glew.h>
 #include <glm.hpp>
+#include <gtc/type_ptr.hpp>
 class Shader
 {
 public:
