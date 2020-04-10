@@ -314,6 +314,97 @@ void renderQuad()
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
 }
+void renderQuadTangent()
+{
+	if (quadVAO == 0)
+	{
+		// positions
+		glm::vec3 pos1(-1.0f, 1.0f, 0.0f);
+		glm::vec3 pos2(-1.0f, -1.0f, 0.0f);
+		glm::vec3 pos3(1.0f, -1.0f, 0.0f);
+		glm::vec3 pos4(1.0f, 1.0f, 0.0f);
+		// texture coordinates
+		glm::vec2 uv1(0.0f, 1.0f);
+		glm::vec2 uv2(0.0f, 0.0f);
+		glm::vec2 uv3(1.0f, 0.0f);
+		glm::vec2 uv4(1.0f, 1.0f);
+		// normal vector
+		glm::vec3 nm(0.0f, 0.0f, 1.0f);
+
+		// calculate tangent/bitangent vectors of both triangles
+		glm::vec3 tangent1, bitangent1;
+		glm::vec3 tangent2, bitangent2;
+		// triangle 1
+		// ----------
+		glm::vec3 edge1 = pos2 - pos1;
+		glm::vec3 edge2 = pos3 - pos1;
+		glm::vec2 deltaUV1 = uv2 - uv1;
+		glm::vec2 deltaUV2 = uv3 - uv1;
+
+		GLfloat f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+		tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+		tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+		tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+		tangent1 = glm::normalize(tangent1);
+
+		bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+		bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+		bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+		bitangent1 = glm::normalize(bitangent1);
+
+		// triangle 2
+		// ----------
+		edge1 = pos3 - pos1;
+		edge2 = pos4 - pos1;
+		deltaUV1 = uv3 - uv1;
+		deltaUV2 = uv4 - uv1;
+
+		f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+		tangent2.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+		tangent2.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+		tangent2.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+		tangent2 = glm::normalize(tangent2);
+
+
+		bitangent2.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+		bitangent2.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+		bitangent2.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+		bitangent2 = glm::normalize(bitangent2);
+
+
+		float quadVertices[] = {
+			// positions            // normal         // texcoords  // tangent                          // bitangent
+			pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+			pos2.x, pos2.y, pos2.z, nm.x, nm.y, nm.z, uv2.x, uv2.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+			pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+
+			pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+			pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+			pos4.x, pos4.y, pos4.z, nm.x, nm.y, nm.z, uv4.x, uv4.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z
+		};
+		// configure plane VAO
+		glGenVertexArrays(1, &quadVAO);
+		glGenBuffers(1, &quadVBO);
+		glBindVertexArray(quadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(8 * sizeof(float)));
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(11 * sizeof(float)));
+	}
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);
+}
 #pragma endregion
 
 #pragma region renderplande() renders a plane in world space
@@ -1195,6 +1286,7 @@ int ModelLoadingDraw()
 		objShader->setFloat("spotLight.outerCutOff", glm::cos(glm::radians(13.5f)));
 		//设置摄像机参数
 		objShader->setVec3("viewPos", camera.Position);
+		objShader->setFloat("shininess", 32.0f);
 
 		//--------------------------------Set MVP Matrix-----------------------------------
 		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -5155,6 +5247,390 @@ int Point_Shadow()
 	glfwTerminate();
 }
 
+int Normal_Mapping_worldSpace()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+
+#pragma endregion 
+
+#pragma region InitShader
+	glEnable(GL_DEPTH_TEST);
+	Shader* objShader = new Shader("shaders/AdvancedLighting/4.1.normal_mapping.vert", "shaders/AdvancedLighting/4.1.normal_mapping.frag");
+	Shader* lampShader = new Shader("shaders/lighting/light.vert", "shaders/lighting/light.frag");
+#pragma endregion 
+
+	unsigned int wallTexture = loadTexture("textures/brickwall.jpg");
+	unsigned int wall_NormalTexture = loadTexture("textures/brickwall_normal.jpg");
+
+#pragma region Model Data
+	float vertices[] = {
+		// positions          // normals           // texture coords
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+	};
+	glm::vec3 pointLightPositions[] = {
+		glm::vec3(0.7f,  0.2f,  2.0f),
+		glm::vec3(2.3f, -3.3f, -4.0f),
+		glm::vec3(-4.0f,  2.0f, -12.0f),
+		glm::vec3(0.0f,  0.0f, -3.0f)
+	};
+	glm::vec3 pointColors[] = {
+		glm::vec3(1.0f, 0.6f, 0.0f),
+		glm::vec3(0.0f, 1.0f, 1.0f),
+		glm::vec3(1.0f, 1.0f, 1.0f),
+		glm::vec3(0.2f, 0.2f, 1.0f)
+	};
+#pragma endregion 
+
+#pragma region Init and load Models to VAO,VBO
+	unsigned int lightVAO;
+	glGenVertexArrays(1, &lightVAO);
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	//绑定
+	glBindVertexArray(lightVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+#pragma endregion
+
+	while (!glfwWindowShouldClose(window))
+	{
+		// input
+		processInput(window);
+		// render
+		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// don't forget to enable shader before setting uniforms
+		objShader->use();
+		//-------------------------设置光属性------------------------------
+		objShader->setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+		objShader->setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+		objShader->setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+		objShader->setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+		//设置point光属性
+		float sin = (float)glm::sin(glfwGetTime());
+		// point light 1
+		objShader->setVec3("pointLights[0].position", pointLightPositions[0]);
+		objShader->setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+		objShader->setVec3("pointLights[0].diffuse", pointColors[0] * sin);
+		objShader->setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+		objShader->setFloat("pointLights[0].constant", 1.0f);
+		objShader->setFloat("pointLights[0].linear", 0.09);
+		objShader->setFloat("pointLights[0].quadratic", 0.032);
+		// point light 2
+		objShader->setVec3("pointLights[1].position", pointLightPositions[1]);
+		objShader->setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
+		objShader->setVec3("pointLights[1].diffuse", pointColors[1] * sin);
+		objShader->setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+		objShader->setFloat("pointLights[1].constant", 1.0f);
+		objShader->setFloat("pointLights[1].linear", 0.09);
+		objShader->setFloat("pointLights[1].quadratic", 0.032);
+		// point light 3
+		objShader->setVec3("pointLights[2].position", pointLightPositions[2]);
+		objShader->setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
+		objShader->setVec3("pointLights[2].diffuse", pointColors[2] * sin);
+		objShader->setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
+		objShader->setFloat("pointLights[2].constant", 1.0f);
+		objShader->setFloat("pointLights[2].linear", 0.09);
+		objShader->setFloat("pointLights[2].quadratic", 0.032);
+		// point light 4
+		objShader->setVec3("pointLights[3].position", pointLightPositions[3]);
+		objShader->setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
+		objShader->setVec3("pointLights[3].diffuse", pointColors[3] * sin);
+		objShader->setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
+		objShader->setFloat("pointLights[3].constant", 1.0f);
+		objShader->setFloat("pointLights[3].linear", 0.09);
+		objShader->setFloat("pointLights[3].quadratic", 0.032);
+		//设置spot光源信息
+		glm::vec3 lightStrength(1.0f);
+		objShader->setVec3("spotLight.position", camera.Position);
+		objShader->setVec3("spotLight.direction", camera.Front);
+		objShader->setVec3("spotLight.ambient", lightStrength*0.1f);
+		objShader->setVec3("spotLight.diffuse", lightStrength*0.5f);
+		objShader->setVec3("spotLight.specular", lightStrength);
+		objShader->setFloat("spotLight.cutOff", glm::cos(glm::radians(10.5f)));
+		objShader->setFloat("spotLight.outerCutOff", glm::cos(glm::radians(13.5f)));
+		//设置摄像机参数
+		objShader->setVec3("viewPos", camera.Position);
+		objShader->setFloat("shininess", 32.f);
+		//--------------------------------Set MVP Matrix-----------------------------------
+		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		glm::mat4 view = camera.GetViewMatrix();
+		objShader->setMat4("projection", projection);
+		objShader->setMat4("view", view);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::rotate(model, (GLfloat)glfwGetTime() * 0.05f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+		//model = glm::rotate(model, glm::radians(90.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
+		objShader->setMat4("model", model);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, wallTexture);
+		glActiveTexture(GL_TEXTURE0 + 1);
+		glBindTexture(GL_TEXTURE_2D, wall_NormalTexture);
+		objShader->setInt("texture_diffuse1", 0);
+		objShader->setInt("texture_normal1", 1);
+		renderQuadTangent();
+
+		//Draw point lights
+		lampShader->use();
+		lampShader->setMat4("view", view);
+		lampShader->setMat4("projection", projection);
+		glBindVertexArray(lightVAO);
+		for (unsigned int i = 0; i < 4; i++)
+		{
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, pointLightPositions[i]);
+			model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
+			lampShader->setMat4("model", model);
+			lampShader->setVec3("lightColor", pointColors[i] * sin);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+		// -------------------------------------------------------------------------------
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+#pragma region Delete
+	delete objShader;
+	glfwTerminate();
+#pragma endregion 
+	return 0;
+}
+
+int Normal_Mapping_tangentSpace()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+
+#pragma endregion 
+
+#pragma region InitShader
+	glEnable(GL_DEPTH_TEST);
+	Shader shader("shaders/AdvancedLighting/4.2.normal_mapping_tangentspace.vert", "shaders/AdvancedLighting/4.2.normal_mapping_tangentspace.frag");
+#pragma endregion 
+
+	unsigned int diffuseMap = loadTexture("textures/brickwall.jpg");
+	unsigned int normalMap = loadTexture("textures/brickwall_normal.jpg");
+
+	shader.use();
+	shader.setInt("diffuseMap", 0);
+	shader.setInt("normalMap", 1);
+
+	// lighting info
+	// -------------
+	glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
+
+	// render loop
+	// -----------
+	while (!glfwWindowShouldClose(window))
+	{
+		processInput(window);
+
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// configure view/projection matrices
+		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		glm::mat4 view = camera.GetViewMatrix();
+		shader.use();
+		shader.setMat4("projection", projection);
+		shader.setMat4("view", view);
+		// render normal-mapped quad
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); // rotate the quad to show normal mapping from multiple directions
+		shader.setMat4("model", model);
+		shader.setVec3("viewPos", camera.Position);
+		shader.setVec3("lightPos", lightPos);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, diffuseMap);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, normalMap);
+		renderQuadTangent();
+
+		// render light source (simply re-renders a smaller plane at the light's position for debugging/visualization)
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.1f));
+		shader.setMat4("model", model);
+		renderQuadTangent();
+
+		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+		// -------------------------------------------------------------------------------
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+	glfwTerminate();
+	return 0;
+}
+
+int ParallaxMapping()
+{
+#pragma region Open Window
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	if (window == nullptr)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glewInit();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+#pragma endregion 
+
+#pragma region InitShader
+	glEnable(GL_DEPTH_TEST);
+	Shader shader("shaders/AdvancedLighting/5.1.parallaxMapping.vert", "shaders/AdvancedLighting/5.1.parallaxMapping.frag");
+#pragma endregion 
+	unsigned int diffuseMap = loadTexture("textures/bricks2.jpg");
+	unsigned int normalMap = loadTexture("textures/bricks2_normal.jpg");
+	unsigned int depthMap = loadTexture("textures/bricks2_disp.jpg");
+
+	shader.use();
+	shader.setInt("diffuseMap", 0);
+	shader.setInt("normalMap", 1);
+	shader.setInt("depthMap", 2);
+	shader.setFloat("heightScale", 0.1f);
+
+	// lighting info
+	// -------------
+	glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
+
+	// render loop
+	// -----------
+	while (!glfwWindowShouldClose(window))
+	{
+		processInput(window);
+
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// configure view/projection matrices
+		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		glm::mat4 view = camera.GetViewMatrix();
+		shader.use();
+		shader.setMat4("projection", projection);
+		shader.setMat4("view", view);
+		// render normal-mapped quad
+		glm::mat4 model = glm::mat4(1.0f);
+		shader.setMat4("model", model);
+		shader.setVec3("viewPos", camera.Position);
+		shader.setVec3("lightPos", lightPos);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, diffuseMap);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, normalMap);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		renderQuadTangent();
+
+		// render light source (simply re-renders a smaller plane at the light's position for debugging/visualization)
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.1f));
+		shader.setMat4("model", model);
+		renderQuadTangent();
+
+		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+		// -------------------------------------------------------------------------------
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+	glfwTerminate();
+	return 0;
+}
+
 int main() {
-	return Point_Shadow();
+	return ParallaxMapping();
 }
