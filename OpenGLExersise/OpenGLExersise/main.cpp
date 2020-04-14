@@ -5686,7 +5686,7 @@ int ColorSpaceTest()
 	if (window == nullptr) { return -1; }
 
 	unsigned int woodTexture = loadTexture("textures/tosic.bmp", false);
-	Shader shader("shaders/AdvancedLighting/3.1.2.debug_quad.vert","shaders/AdvancedLighting/3.1.2.debug_quad_pure.frag");
+	Shader shader("shaders/AdvancedLighting/3.1.2.debug_quad.vert", "shaders/AdvancedLighting/3.1.2.debug_quad_pure.frag");
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -5836,7 +5836,7 @@ int BloomChapter()
 
 	// note that we're loading the texture as an SRGB texture
 	unsigned int woodTexture = loadTexture("textures/wood.png", true);
-	unsigned int containerTexture = loadTexture("textures/container2.png", true); 
+	unsigned int containerTexture = loadTexture("textures/container2.png", true);
 
 	unsigned int hdrFBO;
 	glGenFramebuffers(1, &hdrFBO);
@@ -6042,6 +6042,145 @@ int BloomChapter()
 	return 0;
 }
 
+int Deferred_shading_Geom()
+{
+	GLFWwindow* window = GenerateWindow("BloomChapter");
+	if (window == nullptr) { return -1; }
+
+	// configure global opengl state
+	glEnable(GL_DEPTH_TEST);
+
+	// build and compile shaders
+	Shader shaderGeometryPass("shaders/AdvancedLighting/8.1.g_buffer.vert", "shaders/AdvancedLighting/8.1.g_buffer.frag");
+	Shader shaderQuad("shaders/AdvancedLighting/8.1.debug_quad.vert", "shaders/AdvancedLighting/8.1.debug_quad.frag");
+	// load models
+	Model nanosuit("models/nanosuit/nanosuit.obj");
+	std::vector<glm::vec3> objectPositions;
+	objectPositions.push_back(glm::vec3(-3.0, -3.0, -3.0));
+	objectPositions.push_back(glm::vec3(0.0, -3.0, -3.0));
+	objectPositions.push_back(glm::vec3(3.0, -3.0, -3.0));
+	objectPositions.push_back(glm::vec3(-3.0, -3.0, 0.0));
+	objectPositions.push_back(glm::vec3(0.0, -3.0, 0.0));
+	objectPositions.push_back(glm::vec3(3.0, -3.0, 0.0));
+	objectPositions.push_back(glm::vec3(-3.0, -3.0, 3.0));
+	objectPositions.push_back(glm::vec3(0.0, -3.0, 3.0));
+	objectPositions.push_back(glm::vec3(3.0, -3.0, 3.0));
+
+	// configure g-buffer framebuffer
+	unsigned int gBuffer;
+	glGenFramebuffers(1, &gBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+	unsigned int gPosition, gNormal, gAlbedoSpec, gSpec;
+	// position color buffer
+	glGenTextures(1, &gPosition);
+	glBindTexture(GL_TEXTURE_2D, gPosition);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+	// normal color buffer
+	glGenTextures(1, &gNormal);
+	glBindTexture(GL_TEXTURE_2D, gNormal);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+	// color + specular color buffer
+	glGenTextures(1, &gAlbedoSpec);
+	glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
+	//spec alone
+	glGenTextures(1, &gSpec);
+	glBindTexture(GL_TEXTURE_2D, gSpec);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gSpec, 0);
+	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+	unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 };
+	glDrawBuffers(4, attachments);
+	// create and attach depth buffer (renderbuffer)
+	unsigned int rboDepth;
+	glGenRenderbuffers(1, &rboDepth);
+	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+	// finally check if framebuffer is complete
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	camera.Position = camera.Position + glm::vec3(0, 4, 8);
+	camera.Pitch = -30;
+	camera.UpdateCameraVectors();
+	while (!glfwWindowShouldClose(window))
+	{
+		// input
+		processInput(window);
+
+		// render
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+		// 1. geometry pass: render scene's geometry/color data into gbuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		glm::mat4 model = glm::mat4(1.0f);
+		shaderGeometryPass.use();
+		shaderGeometryPass.setMat4("projection", projection);
+		shaderGeometryPass.setMat4("view", camera.GetViewMatrix());
+		for (unsigned int i = 0; i < objectPositions.size(); i++)
+		{
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, objectPositions[i]);
+			model = glm::scale(model, glm::vec3(0.25f));
+			shaderGeometryPass.setMat4("model", model);
+			nanosuit.Draw(&shaderGeometryPass);
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		shaderQuad.use();
+		shaderQuad.setInt("texture1", 0);
+		glActiveTexture(GL_TEXTURE0);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-0.5, 0.5, 0));
+		model = glm::scale(model, glm::vec3(0.5f));
+		shaderQuad.setMat4("model", model);
+		glBindTexture(GL_TEXTURE_2D, gPosition);
+		renderQuad();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.5, 0.5, 0));
+		model = glm::scale(model, glm::vec3(0.5f));
+		shaderQuad.setMat4("model", model);
+		glBindTexture(GL_TEXTURE_2D, gNormal);
+		renderQuad();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-0.5, -0.5, 0));
+		model = glm::scale(model, glm::vec3(0.5f));
+		shaderQuad.setMat4("model", model);
+		glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+		renderQuad();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.5, -0.5, 0));
+		model = glm::scale(model, glm::vec3(0.5f));
+		shaderQuad.setMat4("model", model);
+		glBindTexture(GL_TEXTURE_2D, gSpec);
+		renderQuad();
+
+		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+		// -------------------------------------------------------------------------------
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	glfwTerminate();
+	return 0;
+}
+
 int main() {
-	return BloomChapter();
+	return Deferred_shading_Geom();
 }
