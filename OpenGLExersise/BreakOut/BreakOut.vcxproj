@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{08977A2A-EEE5-4367-B4E7-3A4DA263E63E}</ProjectGuid>
-    <RootNamespace>OpenGLExersise</RootNamespace>
+    <ProjectGuid>{C26562B1-5CD0-44CE-8327-76EB1E04C574}</ProjectGuid>
+    <RootNamespace>BreakOut</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -89,32 +89,24 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\External Libraries\freetype\include;$(SolutionDir)\External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)External Libraries\freetype\include;$(SolutionDir)External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)External Libraries\assimp\lib\assimp-vc140-mt.dll" "$(TargetDir)"
-copy /Y "$(SolutionDir)External Libraries\freetype\lib\freetype.dll" "$(TargetDir)"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\External Libraries\freetype\include;$(SolutionDir)\External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)External Libraries\freetype\include;$(SolutionDir)External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)External Libraries\assimp\lib\assimp-vc140-mt.dll" "$(TargetDir)"
-copy /Y "$(SolutionDir)External Libraries\freetype\lib\freetype.dll" "$(TargetDir)"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -123,18 +115,14 @@ copy /Y "$(SolutionDir)External Libraries\freetype\lib\freetype.dll" "$(TargetDi
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\External Libraries\freetype\include;$(SolutionDir)\External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)External Libraries\freetype\include;$(SolutionDir)External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)External Libraries\assimp\lib\assimp-vc140-mt.dll" "$(TargetDir)"
-copy /Y "$(SolutionDir)External Libraries\freetype\lib\freetype.dll" "$(TargetDir)"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -143,59 +131,17 @@ copy /Y "$(SolutionDir)External Libraries\freetype\lib\freetype.dll" "$(TargetDi
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\External Libraries\freetype\include;$(SolutionDir)\External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)External Libraries\freetype\include;$(SolutionDir)External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)External Libraries\assimp\lib\assimp-vc140-mt.dll" "$(TargetDir)"
-copy /Y "$(SolutionDir)External Libraries\freetype\lib\freetype.dll" "$(TargetDir)"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Shader.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="mesh.h" />
-    <ClInclude Include="model.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="Shader.h" />
-    <ClInclude Include="stb_image.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="shaders\lighting\object_1.vert" />
-    <Text Include="shaders\started\fragmentSource.frag" />
-    <Text Include="shaders\started\vertexSource.vert" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="shaders\AdvancedGL\1.1.depth_testing.frag" />
-    <None Include="shaders\AdvancedGL\1.1.depth_testing.vert" />
-    <None Include="shaders\lighting\object_caster.frag" />
-    <None Include="shaders\lighting\object_caster.vert" />
-    <None Include="shaders\lighting\object_flash.frag" />
-    <None Include="shaders\lighting\object_flash.vert" />
-    <None Include="shaders\lighting\object_mat.frag" />
-    <None Include="shaders\lighting\object_mat.vert" />
-    <None Include="shaders\lighting\object_Gouraud.frag" />
-    <None Include="shaders\lighting\object_Gouraud.vert" />
-    <None Include="shaders\lighting\object_1.frag" />
-    <None Include="shaders\lighting\light.frag" />
-    <None Include="shaders\lighting\light.vert" />
-    <None Include="shaders\lighting\object_multi.frag" />
-    <None Include="shaders\lighting\object_multi.vert" />
-    <None Include="shaders\lighting\object_poiLight.frag" />
-    <None Include="shaders\lighting\object_poiLight.vert" />
-    <None Include="shaders\models\model_loading.frag" />
-    <None Include="shaders\models\model_loading.vert" />
-    <None Include="shaders\Text\textSource.frag" />
-    <None Include="shaders\Text\textSource.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

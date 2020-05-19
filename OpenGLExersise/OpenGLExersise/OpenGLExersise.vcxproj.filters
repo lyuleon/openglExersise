@@ -70,5 +70,7 @@
     <None Include="shaders\models\model_loading.vert" />
     <None Include="shaders\AdvancedGL\1.1.depth_testing.frag" />
     <None Include="shaders\AdvancedGL\1.1.depth_testing.vert" />
+    <None Include="shaders\Text\textSource.vert" />
+    <None Include="shaders\Text\textSource.frag" />
   </ItemGroup>
 </Project>
