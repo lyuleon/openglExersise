@@ -89,24 +89,40 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)External Libraries\freetype\include;$(SolutionDir)External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)External Libraries\freetype\include;$(SolutionDir)External Libraries\irrKlang-1.6.0\include;$(SolutionDir)External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;freetype.lib;irrKlang.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\irrKlang-1.6.0\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)External Libraries\assimp\lib\assimp-vc140-mt.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\freetype\lib\freetype.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\irrKlang-1.6.0\lib\ikpFlac.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\irrKlang-1.6.0\lib\ikpMP3.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\irrKlang-1.6.0\lib\irrKlang.dll" "$(TargetDir)"
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)External Libraries\freetype\include;$(SolutionDir)External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)External Libraries\freetype\include;$(SolutionDir)External Libraries\irrKlang-1.6.0\include;$(SolutionDir)External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;freetype.lib;irrKlang.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\irrKlang-1.6.0\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)External Libraries\assimp\lib\assimp-vc140-mt.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\freetype\lib\freetype.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\irrKlang-1.6.0\lib\ikpFlac.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\irrKlang-1.6.0\lib\ikpMP3.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\irrKlang-1.6.0\lib\irrKlang.dll" "$(TargetDir)"
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -115,14 +131,22 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)External Libraries\freetype\include;$(SolutionDir)External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)External Libraries\freetype\include;$(SolutionDir)External Libraries\irrKlang-1.6.0\include;$(SolutionDir)External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;freetype.lib;irrKlang.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\irrKlang-1.6.0\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)External Libraries\assimp\lib\assimp-vc140-mt.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\freetype\lib\freetype.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\irrKlang-1.6.0\lib\ikpFlac.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\irrKlang-1.6.0\lib\ikpMP3.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\irrKlang-1.6.0\lib\irrKlang.dll" "$(TargetDir)"
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -131,17 +155,51 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)External Libraries\freetype\include;$(SolutionDir)External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)External Libraries\freetype\include;$(SolutionDir)External Libraries\irrKlang-1.6.0\include;$(SolutionDir)External Libraries\assimp\include;C:\opengl\glfw-3.3.bin.WIN32\include;C:\opengl\glm\glm;C:\opengl\glew-2.1.0-win32\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;freetype.lib;irrKlang.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\opengl\glfw-3.3.bin.WIN32\lib-vc2015;C:\opengl\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;$(SolutionDir)\External Libraries\freetype\lib;$(SolutionDir)\External Libraries\irrKlang-1.6.0\lib;$(SolutionDir)\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)External Libraries\assimp\lib\assimp-vc140-mt.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\freetype\lib\freetype.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\irrKlang-1.6.0\lib\ikpFlac.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\irrKlang-1.6.0\lib\ikpMP3.dll" "$(TargetDir)"
+copy /Y "$(SolutionDir)External Libraries\irrKlang-1.6.0\lib\irrKlang.dll" "$(TargetDir)"
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ball_object.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="game_level.cpp" />
+    <ClCompile Include="game_object.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="particle_generator.cpp" />
+    <ClCompile Include="post_processor.cpp" />
+    <ClCompile Include="resource_manager.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="sprite_renderer.cpp" />
+    <ClCompile Include="texture.cpp" />
+    <ClCompile Include="text_renderer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ball_object.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="game_level.h" />
+    <ClInclude Include="game_object.h" />
+    <ClInclude Include="particle_generator.h" />
+    <ClInclude Include="post_processor.h" />
+    <ClInclude Include="power_up.h" />
+    <ClInclude Include="resource_manager.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="sprite_renderer.h" />
+    <ClInclude Include="stb_image.h" />
+    <ClInclude Include="texture.h" />
+    <ClInclude Include="text_renderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
